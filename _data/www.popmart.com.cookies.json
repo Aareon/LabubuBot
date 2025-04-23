@@ -1,0 +1,29 @@
+[
+    {
+      "name": "FECW",
+      "value": "586221afcb60a70ee685acb8015eee9179aeb74d8bd16fa593af092635d0b7421b813cd568cf91618fa85ff1e2897b491dc043c5d7384525664adaadfffcffe4712881b41ed8155954fc15be1d2409f3f2",
+      "domain": "www.popmart.com",
+      "path": "/",
+      "expires": 1757650889.988133,
+      "httpOnly": false,
+      "secure": true
+    },
+    {
+      "name": "mp_sessionId",
+      "value": "bfsf1h2qifgl6ayj",
+      "domain": "www.popmart.com",
+      "path": "/",
+      "expires": 1743471257,
+      "httpOnly": false,
+      "secure": false
+    },
+    {
+      "name": "FECA",
+      "value": "1q6E4xZQGvplbyOoEOrjnAZl67PaKaxU4zP43vZFp97X9vhckoaDirZxSk5TJxT47GclcBXkCaBZq6OP9gCyxytlCEvqwy/Een7g1YVi4pXmpNDenOxViPEiCkyJc9dtR4G73TDxtdENHylE5wDhM90AZOIs7/A2QlAHpFh7Jm+fLZiHJNRMxhCCuIT1Fe0n24",
+      "domain": "www.popmart.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true
+    }
+  ]
