@@ -6,11 +6,6 @@
 
 Popmart Automate Script
 
-## Demo
-
-- **Login Based**: [Watch Demo](https://youtu.be/zQ90W3Ss240)
-- **Cookie Based**: [Watch Demo](https://youtu.be/dQOrt1x7VzU)
-
 ## Installation
 
 1. Clone the repository and install dependencies using npm:
@@ -53,12 +48,6 @@ Popmart Automate Script
 ## Usage
 
 ### Running Scripts
-
-To run the script for bot login based:
-
-```bash
-npm run bot-login-based
-```
 
 To run the script for bot cookie based:
 
