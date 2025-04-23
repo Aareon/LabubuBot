@@ -98,6 +98,14 @@ Additional scripts include (PM2 required):
 - `@tsconfig/node18`: ^18.2.4
 - `typescript`: ^5.5.3
 
+## Credits
+
+This project is based on [Labubot](https://github.com/un4ckn0wl3z/Labubot) by [un4ckn0wl3z](https://github.com/un4ckn0wl3z).  
+Big thanks for the original work!
+
+Modifications and enhancements made by [Cydthe](https://github.com/yourusername).
+
+
 ## License
 
 This project is licensed under the WTFPL License. See the [LICENSE](LICENSE) file for details.
