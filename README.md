@@ -103,7 +103,7 @@ Additional scripts include (PM2 required):
 This project is based on [Labubot](https://github.com/un4ckn0wl3z/Labubot) by [un4ckn0wl3z](https://github.com/un4ckn0wl3z).  
 Big thanks for the original work!
 
-Modifications and enhancements made by [Cydthe](https://github.com/yourusername).
+Modifications and enhancements made by [[Cydthe](https://github.com/cydthe)](https://github.com/yourusername).
 
 
 ## License
