@@ -12,7 +12,7 @@ dependencies = [
     "selenium (>=4.33.0,<5.0.0)",
     "webdriver-manager (>=4.0.2,<5.0.0)",
     "pyyaml (>=6.0.2,<7.0.0)",
-    "httpx (>=0.28.1,<0.29.0)",
+    "httpx[http2] (>=0.28.1,<0.29.0)",
     "asyncio-mqtt (>=0.16.2,<0.17.0)"
 ]
 

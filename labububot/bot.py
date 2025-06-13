@@ -4,6 +4,7 @@ Main LabubuBot class - orchestrates all bot operations
 
 import json
 import time
+import re
 import asyncio
 from datetime import datetime
 from pathlib import Path
@@ -70,6 +71,41 @@ class LabubuBot:
         asyncio.run(self.http_manager.close_client())
     
     # Authentication & Session Management
+    def wait_for_login_success(self, timeout: int = 300) -> Dict[str, Any]:
+        """
+        Wait for successful login redirect and save session data
+        Monitors for redirect to https://popmart.com/{ca|us}/account
+        """
+        if not self.selenium_manager.is_driver_active():
+            raise RuntimeError("Selenium session not started. Call start_selenium_session() first.")
+            
+        driver = self.selenium_manager.get_driver()
+        end_time = time.time() + timeout
+        
+        safe_log('info', "⏳ Waiting for successful login redirect...")
+        safe_log('info', "💡 Looking for redirect to account page (ca/us)")
+        
+        while time.time() < end_time:
+            current_url = driver.current_url
+            
+            # Check if redirected to account page (ca or us)
+            if re.match(r'https://popmart\.com/(ca|us)/account', current_url):
+                safe_log('info', f"✅ Login successful! Detected redirect to: {current_url}")
+                
+                # Save session data immediately
+                session_data = self.export_session_data()
+                safe_log('info', "💾 Session data saved successfully")
+                
+                # Close the browser window
+                safe_log('info', "🔒 Closing browser window...")
+                driver.quit()
+                
+                return session_data
+                
+            time.sleep(1)  # Check every second
+        
+        raise TimeoutError(f"Login timeout ({timeout}s) - did not detect successful redirect to account page")
+    
     def interactive_login_and_export_cookies(self) -> Dict[str, Any]:
         """
         Open browser for interactive login when credentials are not provided
@@ -99,55 +135,56 @@ class LabubuBot:
             except TimeoutException:
                 safe_log('info', "ℹ️  No agreement dialog found")
             
-            # Wait for user to complete login manually
+            # Wait for user to complete login manually using URL-based detection
             safe_log('info', "⏳ Waiting for you to complete login in the browser...")
             safe_log('info', "💡 The browser window should be open - please log in manually")
+            safe_log('info', "🎯 The bot will automatically detect when you're redirected to the account page")
             
-            # Monitor for successful login by checking URL changes
+            # Use URL-based detection to avoid stale element references
             login_successful = False
             max_wait_time = 300  # 5 minutes timeout
             start_time = time.time()
             
             while not login_successful and (time.time() - start_time) < max_wait_time:
-                current_url = driver.current_url.lower()
-                
-                # Check if we're no longer on login page
-                if "login" not in current_url:
-                    # Additional check - look for user-specific elements
-                    try:
-                        # Try to find elements that indicate successful login
-                        # This could be user avatar, account menu, etc.
-                        driver.find_element(By.CSS_SELECTOR, 
-                            ".user-avatar, .account-menu, .user-info, [class*='user'], [class*='account']")
-                        login_successful = True
-                        safe_log('info', "✅ Login detected successfully!")
-                        break
-                    except NoSuchElementException:
-                        pass
+                try:
+                    current_url = driver.current_url
+                    safe_log('debug', f"Current URL: {current_url}")
                     
-                    # Fallback - if URL changed significantly, assume success
-                    if any(indicator in current_url for indicator in ['account', 'profile', 'dashboard', 'user']):
+                    # Check if redirected to account page (ca or us) - the specific pattern we're looking for
+                    if re.match(r'https://popmart\.com/(ca|us)/account', current_url):
+                        safe_log('info', f"✅ Login successful! Detected redirect to: {current_url}")
                         login_successful = True
-                        safe_log('info', "✅ Login detected via URL change!")
                         break
+                    
+                    # Also check for other account-related URLs as backup
+                    current_url_lower = current_url.lower()
+                    if ("account" in current_url_lower and "login" not in current_url_lower):
+                        safe_log('info', f"✅ Login successful! Detected account page: {current_url}")
+                        login_successful = True
+                        break
+                        
+                except Exception as e:
+                    # If there's any issue getting the URL, just continue
+                    safe_log('debug', f"URL check error (continuing): {e}")
+                    pass
                 
-                # Wait a bit before checking again
-                time.sleep(2)
+                # Wait before checking again
+                time.sleep(1)
             
             if not login_successful:
-                # Check one more time with a different approach
-                current_url = driver.current_url.lower()
-                if "login" not in current_url:
-                    safe_log('info', "✅ Login assumed successful based on URL change")
-                    login_successful = True
-                else:
-                    raise TimeoutException("Login not completed within timeout period")
+                raise TimeoutError("Login timeout - did not detect successful redirect to account page")
             
-            # Export cookies and local storage
+            # Export cookies and local storage immediately
             safe_log('info', "📤 Login successful! Exporting session data...")
-            return self.export_session_data()
+            session_data = self.export_session_data()
+            
+            # Close the browser window
+            safe_log('info', "🔒 Closing browser window...")
+            driver.quit()
+            
+            return session_data
                 
-        except TimeoutException:
+        except TimeoutError:
             safe_log('error', "⏰ Login timeout - please try again")
             raise Exception("Interactive login timed out")
         except Exception as e:
@@ -212,18 +249,13 @@ class LabubuBot:
             login_btn.click()
             safe_log('info', "🔑 Login button clicked")
             
-            # Wait for login to complete
-            time.sleep(3)
+            # Wait for login redirect using the new method
+            safe_log('info', "⏳ Waiting for login redirect to account page...")
+            return self.wait_for_login_success(timeout=60)
             
-            # Check if login was successful
-            if "login" not in driver.current_url.lower():
-                safe_log('info', "✅ Automated login successful!")
-                return self.export_session_data()
-            else:
-                # If automated login fails, fall back to interactive
-                safe_log('warning', "⚠️  Automated login failed, falling back to interactive login")
-                return self.interactive_login_and_export_cookies()
-                
+        except TimeoutError:
+            safe_log('warning', "⚠️  Automated login timeout, falling back to interactive login")
+            return self.interactive_login_and_export_cookies()
         except Exception as e:
             safe_log('warning', f"⚠️  Automated login failed: {e}")
             safe_log('info', "🔄 Falling back to interactive login...")
@@ -468,7 +500,6 @@ class LabubuBot:
             # Force click using JavaScript
             driver.execute_script("arguments[0].click();", pay_btn)
             safe_log('info', "✅ Pay button clicked!")
-            
         except TimeoutException:
             safe_log('warning', "❌ Pay button not clicked")
         
